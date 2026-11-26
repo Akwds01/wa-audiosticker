@@ -23,6 +23,8 @@ import {
   sendNativeAudioSticker,
   downloadQuotedBuffer,
   audioSession,
+  videoHasAudio,
+  extractAudioFromVideo,
 } from "./features/audiosticker-native.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -44,7 +46,20 @@ function classify(mtype) {
   return "unknown";
 }
 
+// klasifikasi media dari pesan yang di-REPLY (quoted)
+function classifyQuoted(mtype) {
+  const q = mtype?.extendedTextMessage?.contextInfo?.quotedMessage;
+  if (!q) return "unknown";
+  return classify(q);
+}
+
+// ambil buffer media: dari pesan langsung ATAU dari pesan yang di-reply
 async function getMediaBuffer(sock, msg, mtype) {
+  const quoted = mtype?.extendedTextMessage?.contextInfo?.quotedMessage;
+  if (quoted) {
+    const buf = await downloadQuotedBuffer(sock, { message: quoted }).catch(() => null);
+    if (buf && buf.length > 100) return buf;
+  }
   const node = msg.message[Object.keys(msg.message)[0]];
   if (!node?.mediaKey) return null;
   const buf = await downloadQuotedBuffer(sock, msg).catch(() => null);
@@ -185,9 +200,9 @@ async function handleCommand(sock, jid, msg, text, mtype, sessionKey) {
   }
 
   const body = text.replace(/^[.!]?\s*(?:as|astick|audiosticker|stikeraudio)\b\s*/i, "").trim();
-  const cls = classify(mtype);
+  const cls = classify(mtype) !== "unknown" ? classify(mtype) : classifyQuoted(mtype);
 
-  // !as + reply ke media (step flow native)
+  // !as + reply/kirim media (step flow native)
   if (cls === "media" || cls === "audio") {
     const buf = await getMediaBuffer(sock, msg, mtype);
     if (!buf) throw new Error("Gagal ambil media dari pesan");
@@ -196,8 +211,19 @@ async function handleCommand(sock, jid, msg, text, mtype, sessionKey) {
       // step 1: simpan audio
       audioSession.set(sessionKey, { audioBuf: buf });
       await sendText(sock, jid, msg,
-        "🎵 Audio disimpan ✅\n\n*Step 2:* kirim / reply gambar, stiker, atau GIF-nya 👉");
+        "🎵 Audio disimpan ✅\n\n*Step 2:* kirim / reply gambar, stiker, GIF, atau video-nya 👉");
       return;
+    }
+
+    // VIDEO beraudio → langsung jadi audio sticker (pakai track audionya sendiri)
+    if (cls === "media" && buf.length > 12 && buf.toString("ascii", 4, 8) === "ftyp") {
+      const hasAudio = await videoHasAudio(buf);
+      if (hasAudio) {
+        const audioBuf = await extractAudioFromVideo(buf);
+        await sendNativeAudioSticker(sock, jid, msg, audioBuf, buf);
+        return;
+      }
+      // video tanpa audio → perlakukan seperti media biasa (tunggu audio)
     }
 
     // media + cek audio tersimpan?

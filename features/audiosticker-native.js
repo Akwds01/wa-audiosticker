@@ -232,6 +232,36 @@ async function videoToAnimatedWebp(videoBuf) {
   }
 }
 
+// video punya track audio?
+export async function videoHasAudio(videoBuf) {
+  const tmpId = randomBytes(6).toString("hex");
+  const p = path.join(os.tmpdir(), `as_probe_${tmpId}.mp4`);
+  try {
+    await fs.writeFile(p, videoBuf);
+    const { stdout } = await execFileAsync("ffprobe", ["-v", "error", "-select_streams", "a", "-show_entries", "stream=codec_type", "-of", "csv=p=0", p]);
+    return /audio/.test(stdout);
+  } catch {
+    return false;
+  } finally {
+    await fs.unlink(p).catch(() => {});
+  }
+}
+
+// ekstrak track audio dari video → buffer audio
+export async function extractAudioFromVideo(videoBuf) {
+  const tmpId = randomBytes(6).toString("hex");
+  const inPath = path.join(os.tmpdir(), `as_ex_${tmpId}.mp4`);
+  const outPath = path.join(os.tmpdir(), `as_ex_${tmpId}.m4a`);
+  try {
+    await fs.writeFile(inPath, videoBuf);
+    await execFileAsync("ffmpeg", ["-y", "-i", inPath, "-vn", "-map", "0:a:0", "-t", String(config.maxAudioDuration), outPath]);
+    return await fs.readFile(outPath);
+  } finally {
+    await fs.unlink(inPath).catch(() => {});
+    await fs.unlink(outPath).catch(() => {});
+  }
+}
+
 // Download media dari pesan WA (image/sticker/audio/video/document)
 export async function downloadQuotedBuffer(sock, msg) {
   const rawMsg = msg.message || {};

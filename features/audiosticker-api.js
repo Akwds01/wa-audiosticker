@@ -6,6 +6,12 @@ import config from "../config.js";
 
 export async function sendApiAudioSticker(sock, jid, msg, mediaUrl, audioUrl, sendText) {
   const react = (e) => sock.sendMessage(jid, { react: { text: e, key: msg.key } }).catch(() => {});
+  if (!config.jereApi.apiKey) {
+    await react("❌");
+    await sendText(sock, jid, msg,
+      "❌ API key Jere-Api belum diisi.\nIsi di `config.js` (jereApi.apiKey) atau set env `JERE_API_KEY`.\nMode native (kirim media langsung) tetap jalan tanpa API key.");
+    return;
+  }
   await react("⏳");
   try {
     const url =

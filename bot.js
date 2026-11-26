@@ -24,7 +24,6 @@ import {
   downloadQuotedBuffer,
   audioSession,
 } from "./features/audiosticker-native.js";
-import { sendApiAudioSticker } from "./features/audiosticker-api.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const logger = pino({ level: "silent" });
@@ -75,15 +74,13 @@ async function sendText(sock, jid, msg, text) {
 
 const HELP = `🎨 *Bot Audiosticker — XCPT*
 
-*Cara 1 — step flow (paling gampang):*
-1. Ketik \`!as\` + reply/kirim audio (mp3/ogg/VN) 🎵
-2. Kirim gambar / GIF / stiker / video 🖼️
+*Cara pakai:*
+1. Ketik \`!as\` + kirim/reply audio (mp3/ogg/VN) 🎵
+2. Kirim/reply gambar / GIF / stiker / video 🖼️
 → Audio sticker NATIVE dibikin — ikon speaker di WA! 🔊
 
-Juga bisa: reply stiker yang udah ada + \`!as\` untuk ngasih suara.
-
-*Cara 2 — semua URL (via API):*
-\`!as <urlGambar> | <urlAudio>\`
+Bisa dibalik (gambar dulu baru audio), dan tanpa \`!as\` juga bisa — media langsung dikenali.
+Stiker yang sudah ada bisa diberi suara: reply stikernya pakai \`!as\` setelah audio disimpan.
 
 Perintah: \`!menu\` bantuan`;
 
@@ -215,21 +212,6 @@ async function handleCommand(sock, jid, msg, text, mtype, sessionKey) {
     pending.set(sessionKey, { mediaBuf: buf });
     await sendText(sock, jid, msg,
       "🖼️ Media diterima ✅\nSekarang kirim audionya (mp3/ogg/m4a/VN) 👉");
-    return;
-  }
-
-  // !as urlA urlB / urlA | urlB → pakai API
-  const parts = body.includes("|") ? body.split("|") : body.split(/\s+/);
-  const a = parts[0]?.trim();
-  const b = parts[1]?.trim();
-  if (a && b && /^https?:\/\//i.test(a) && /^https?:\/\//i.test(b)) {
-    await sendApiAudioSticker(sock, jid, msg, a, b, sendText);
-    return;
-  }
-  if (a && /^https?:\/\//i.test(a)) {
-    pending.set(sessionKey, { mediaUrl: a });
-    await sendText(sock, jid, msg,
-      "🖼️ URL media diterima ✅\nSekarang kirim audionya (mp3/ogg/m4a/VN), atau ketik `!as <urlMedia> <urlAudio>` 👉");
     return;
   }
 

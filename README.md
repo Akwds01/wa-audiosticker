@@ -3,20 +3,18 @@
 Bot WhatsApp untuk bikin **Audio Sticker** (stiker bersuara dengan ikon speaker 🔊) langsung dari media yang dikirim di chat.
 
 ## Fitur
-- **Audio Sticker Native** (tanpa API): stiker asli WA bersuara, waveform + ikon speaker
+- **Audio Sticker Native** — stiker asli WA bersuara, waveform + ikon speaker, tanpa API eksternal
 - Media yang didukung: gambar, GIF, stiker, video (mp4) + audio mp3/ogg/m4a/voice note
 - Stiker yang **sudah ada** bisa diberi suara: reply stiker dengan `!as` setelah audio disimpan
 - Metadata pack & author: **XCPT** (ubah di `config.js`)
-- Mode URL via [Jere-Api](https://api.jerexd.my.id): `!as <urlGambar> | <urlAudio>`
 - Auto-reconnect, retry kirim 3x, perintah tanpa prefix juga dikenali
 
 ## Struktur
 ```
 ├── bot.js                        # Menu utama: koneksi WA, pairing, routing pesan
-├── config.js                     # ⚙️ SEMUA konfigurasi (API key, pack/author, prefix)
+├── config.js                     # ⚙️ SEMUA konfigurasi (pack/author, prefix)
 ├── features/
-│   ├── audiosticker-native.js    # Fitur: audio sticker native (ogg opus + exif + proto patch)
-│   └── audiosticker-api.js       # Fitur: audio sticker via Jere-Api (mode URL)
+│   └── audiosticker-native.js    # Fitur: audio sticker native (ogg opus + exif + proto patch)
 └── lib/
     └── net-fix.js                # Fix jaringan: paksa IPv4 (anti happy-eyeballs timeout)
 ```
@@ -34,7 +32,7 @@ node bot.js 628xxxxxxxxxx   # akan muncul PAIRING CODE, masukkan di WA → Peran
 ```
 
 ## Konfigurasi
-Semua pengaturan ada di **`config.js`** — API key, kode pairing, nama pack/author, durasi audio maksimal, prefix perintah.
+Semua pengaturan ada di **`config.js`** — kode pairing, nama pack/author, durasi audio maksimal, prefix perintah.
 
 ## Catatan
 - Audio dikonversi otomatis ke OGG Opus 48kHz mono (butuh `ffmpeg`)

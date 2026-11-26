@@ -10,12 +10,6 @@ export default {
   // Kode pairing custom (max 8 karakter, alfanumerik, ditampilkan XXXX-XXXX)
   pairingCode: "JERE0001",
 
-  // API Jere-Api (untuk mode URL) — isi api key sendiri, jangan di-commit
-  jereApi: {
-    base: "https://api.jerexd.my.id/api/maker/audiosticker",
-    apiKey: process.env.JERE_API_KEY || "", // ← isi key kamu di sini atau via env JERE_API_KEY
-  },
-
   // Metadata stiker (EXIF) — tampil di detail stiker WA
   sticker: {
     pack: "XCPT",

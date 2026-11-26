@@ -4,7 +4,7 @@ Bot WhatsApp untuk bikin **Audio Sticker** (stiker bersuara dengan ikon speaker 
 
 ## Fitur
 - **Audio Sticker Native** — stiker asli WA bersuara, waveform + ikon speaker, tanpa API eksternal
-- Media yang didukung: gambar, GIF, stiker, video (mp4) + audio mp3/ogg/m4a/voice note
+- Media yang didukung: gambar, GIF, stiker, **video (otomatis jadi animasi!)** + audio mp3/ogg/m4a/voice note
 - Stiker yang **sudah ada** bisa diberi suara: reply stiker dengan `!as` setelah audio disimpan
 - Metadata pack & author: **XCPT** (ubah di `config.js`)
 - Auto-reconnect, retry kirim 3x, perintah tanpa prefix juga dikenali

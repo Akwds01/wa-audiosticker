@@ -197,6 +197,41 @@ function isWebpAnimated(buf) {
   return buf.includes(Buffer.from("ANIM"));
 }
 
+// deteksi video (mp4/mov — magic bytes "ftyp")
+function isVideoBuffer(buf) {
+  return Buffer.isBuffer(buf) && buf.length > 12 && buf.toString("ascii", 4, 8) === "ftyp";
+}
+
+// video → webp animasi 512x512 (fps 10, transparan, loop)
+async function videoToAnimatedWebp(videoBuf) {
+  const tmpId = randomBytes(6).toString("hex");
+  const inPath = path.join(os.tmpdir(), `as_vid_${tmpId}.mp4`);
+  const outPath = path.join(os.tmpdir(), `as_vid_${tmpId}.webp`);
+  try {
+    await fs.writeFile(inPath, videoBuf);
+    await execFileAsync("ffmpeg", [
+      "-y",
+      "-i", inPath,
+      "-vf", "fps=10,scale=512:512:force_original_aspect_ratio=decrease,format=rgba,pad=512:512:(ow-iw)/2:(oh-ih)/2:color=#00000000,setsar=1",
+      "-c:v", "libwebp",
+      "-lossless", "0",
+      "-compression_level", "6",
+      "-q:v", "50",
+      "-loop", "0",
+      "-preset", "picture",
+      "-an",
+      "-vsync", "0",
+      outPath,
+    ]);
+    const out = await fs.readFile(outPath);
+    if (out.length < 100) throw new Error("hasil kosong");
+    return out;
+  } finally {
+    await fs.unlink(inPath).catch(() => {});
+    await fs.unlink(outPath).catch(() => {});
+  }
+}
+
 // Download media dari pesan WA (image/sticker/audio/video/document)
 export async function downloadQuotedBuffer(sock, msg) {
   const rawMsg = msg.message || {};
@@ -229,11 +264,13 @@ export async function sendNativeAudioSticker(sock, jid, msg, audioBuf, rawImg) {
 
   await react("⏳");
   try {
-    // gambar → webp 512x512 + EXIF pack/author (stiker/webp asli hanya dapat exif)
+    // video → webp animasi via ffmpeg; gambar → webp 512x512 (stiker/webp asli hanya exif)
     const isWebp =
       rawImg.length > 12 && rawImg.toString("ascii", 0, 4) === "RIFF";
     let stickerBuf = rawImg;
-    if (!isWebp) {
+    if (isVideoBuffer(rawImg)) {
+      stickerBuf = await videoToAnimatedWebp(rawImg);
+    } else if (!isWebp) {
       stickerBuf = await sharp(rawImg)
         .rotate()
         .resize(512, 512, {

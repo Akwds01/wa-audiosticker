@@ -1,11 +1,11 @@
 // ═══════════════════════════════════════════
 //  KONFIGURASI BOT AUDIOSTICKER
-//  Edit semua pengaturan di file ini saja
+//  Edit semua pengaturan di file ini saja — tanpa .env
 // ═══════════════════════════════════════════
 
 export default {
   // Nomor WA bot (untuk pairing code) — juga bisa lewat argumen: node bot.js 628xx
-  botNumber: process.env.BOT_NUMBER || "",
+  botNumber: "6283148948917",
 
   // Kode pairing custom (max 8 karakter, alfanumerik, ditampilkan XXXX-XXXX)
   pairingCode: "JERE0001",

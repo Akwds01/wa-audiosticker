@@ -1,5 +1,4 @@
 node_modules/
 auth/
 *.log
-.env
 tmp_upload.*

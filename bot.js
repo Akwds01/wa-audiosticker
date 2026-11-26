@@ -99,7 +99,7 @@ async function start() {
 
   sock.ev.on("creds.update", saveCreds);
 
-  const botNumber = (process.argv[2] || process.env.BOT_NUMBER || config.botNumber);
+  const botNumber = (process.argv[2] || config.botNumber);
   if (!sock.authState.creds.registered && botNumber) {
     setTimeout(async () => {
       try {

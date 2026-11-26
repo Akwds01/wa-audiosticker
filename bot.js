@@ -27,6 +27,8 @@ import {
   extractAudioFromVideo,
 } from "./features/audiosticker-native.js";
 
+import { buildMenuHtml, sendRichMenu } from "./features/richmenu.js";
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const logger = pino({ level: "silent" });
 
@@ -195,6 +197,14 @@ async function start() {
 
 async function handleCommand(sock, jid, msg, text, mtype, sessionKey) {
   if (/^[.!]?\s*(menu|help)\b/i.test(text)) {
+    // coba kirim richmenu HTML interaktif, fallback ke teks
+    try {
+      await sendRichMenu(sock, jid, buildMenuHtml(), "🎨 XCPT Menu");
+      console.log("RICHMENU TERKIRIM ->", jid);
+      return;
+    } catch (e) {
+      console.error("RICHMENU gagal, fallback teks:", e.message);
+    }
     await sendText(sock, jid, msg, HELP);
     return;
   }
